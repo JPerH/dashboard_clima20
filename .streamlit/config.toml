@@ -1,0 +1,19 @@
+[theme]
+# Color principal para botones, sliders y elementos activos (Verde agro/naturaleza)
+primaryColor = "#2E7D32"
+
+# Color de fondo principal de la aplicación (Blanco/Gris muy claro para dar aspecto de reporte)
+backgroundColor = "#F4F6F6"
+
+# Color de fondo de la barra lateral (Un tono ligeramente distinto para separar áreas)
+secondaryBackgroundColor = "#E8ECEF"
+
+# Color del texto (Gris oscuro/Casi negro para no cansar la vista)
+textColor = "#1C2833"
+
+# Tipografía limpia y moderna (opciones: "sans serif", "serif", "monospace")
+font = "sans serif"
+
+[layout]
+# Forzar el uso del ancho completo por defecto sin que el usuario tenga que configurarlo
+maxContentWidth = "100%"
