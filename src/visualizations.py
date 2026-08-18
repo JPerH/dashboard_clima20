@@ -61,13 +61,16 @@ def _generar_matriz_heatmap(df, columna, mapeo):
 def plot_ventana_fumigacion(df: pd.DataFrame):
     if df.empty: return go.Figure()
     
-    mapeo = {'Óptima (Marron)': 1, 'Riesgo de Lavado (Roja)': 0}
+    # 1. CORRECCIÓN: El texto debe coincidir exactamente con los datos de tu DataFrame
+    mapeo = {'Óptima (Verde)': 1, 'Riesgo de Lavado (Roja)': 0}
+    
     matrix_num, hover_txt = _generar_matriz_heatmap(df, 'ventana_fumigacion', mapeo)
     matrix_num = matrix_num.fillna(0) # Rojo por defecto si falta
     
     fig = px.imshow(matrix_num, 
                     labels=dict(x="Día Proyectado", y="Región", color="Estado"),
                     color_continuous_scale=[[0, '#C62828'], [1, '#2E7D32']], # 0: Rojo, 1: Verde
+                    zmin=0, zmax=1, # 2. CORRECCIÓN: Obligar a Plotly a usar 0 para rojo y 1 para verde
                     title="P2: Calendario Diario de Ventana de Fumigación a 14 Días<br><sup>Ubicación exacta de días Óptimos (Verde) vs Riesgo (Rojo)</sup>")
     
     fig.update_traces(xgap=2, ygap=2, hovertemplate="Región: %{y}<br>Día: %{x}<br>Estado: %{customdata}<extra></extra>", customdata=hover_txt)
