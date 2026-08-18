@@ -3,7 +3,6 @@ Dashboard Analítico — Proyecto Final Clima
 """
 import streamlit as st
 import pandas as pd
-import datetime
 from src.data_processor import cargar_y_filtrar_datos
 from src.visualizations import (
     plot_clima_general, 
@@ -71,11 +70,9 @@ def main():
         st.markdown("### 🔮 Proyección Operativa (17 Ago - 31 Ago)")
         st.caption("Resumen de alertas y condiciones esperadas para las próximas dos semanas.")
         
-        # Filtramos solo los datos del futuro (proyectados)
         df_proy = df_filtrado[df_filtrado["es_proyeccion"] == True]
         
         if not df_proy.empty:
-            # 1. KPIs
             p1, p2, p3, p4, p5 = st.columns(5)
             
             temp_proy = df_proy["temperature_2m"].mean()
@@ -92,49 +89,39 @@ def main():
             color_helada = "inverse" if dias_helada > 0 else "normal"
             p4.metric("❄️ Alertas de Helada", f"{dias_helada} días", delta="Peligro", delta_color=color_helada)
             
-            # KPI Calidad Premium
             if "calidad_estimada_fruto" in df_proy.columns:
                 dias_premium = len(df_proy[df_proy["calidad_estimada_fruto"] == "Premium"])
                 p5.metric("🍎 Calidad Premium", f"{dias_premium} días", delta="Proyección de cosecha", delta_color="normal")
             else:
                 p5.metric("📉 Merma Estimada", "0%", delta="Sin alertas", delta_color="normal")
             
-            # 2. Tabla Operativa Diaria
-            st.markdown("#### 📅 Detalle de Proyección Diaria")
-            
-            # REEMPLAZO: Cambiamos precipitación por relative_humidity_2m
-            cols_tabla = [
-                "fecha", "temperature_2m", "relative_humidity_2m", 
-                "estres_hidrico", "ventana_fumigacion", 
-                "riesgo_biologico", "alerta_helada_tipo", "calidad_estimada_fruto"
-            ]
-            
-            # Filtramos solo las columnas que existan en el DataFrame para evitar errores
-            cols_existentes = [c for c in cols_tabla if c in df_proy.columns]
-            df_tabla = df_proy[cols_existentes].copy()
-            
-            # Formateamos la humedad relativa para que se vea limpia (1 decimal)
-            if "relative_humidity_2m" in df_tabla.columns:
-                df_tabla["relative_humidity_2m"] = df_tabla["relative_humidity_2m"].round(1)
-            
-            # Formatear fecha y renombrar columnas
-            if 'fecha' in df_tabla.columns:
-                df_tabla['fecha'] = df_tabla['fecha'].dt.strftime('%Y-%m-%d')
+            with st.expander("📅 Ver Detalle de Proyección Diaria (Tabla de Datos)", expanded=False):
+                cols_tabla = [
+                    "fecha", "temperature_2m", "relative_humidity_2m", 
+                    "estres_hidrico", "ventana_fumigacion", 
+                    "riesgo_biologico", "alerta_helada_tipo", "calidad_estimada_fruto"
+                ]
+                cols_existentes = [c for c in cols_tabla if c in df_proy.columns]
+                df_tabla = df_proy[cols_existentes].copy()
                 
-            nombres_amigables = {
-                "fecha": "Fecha",
-                "temperature_2m": "Temp. Prom. (°C)",
-                "relative_humidity_2m": "Humedad Rel. (%)",
-                "estres_hidrico": "Estado Hídrico",
-                "ventana_fumigacion": "Fumigación",
-                "riesgo_biologico": "Riesgo Plagas",
-                "alerta_helada_tipo": "Heladas",
-                "calidad_estimada_fruto": "Calidad Esperada"
-            }
-            df_tabla.rename(columns=nombres_amigables, inplace=True)
-            
-            # Mostrar dataframe
-            st.dataframe(df_tabla, hide_index=True, use_container_width=True)
+                if "relative_humidity_2m" in df_tabla.columns:
+                    df_tabla["relative_humidity_2m"] = df_tabla["relative_humidity_2m"].round(1)
+                
+                if 'fecha' in df_tabla.columns:
+                    df_tabla['fecha'] = df_tabla['fecha'].dt.strftime('%Y-%m-%d')
+                    
+                nombres_amigables = {
+                    "fecha": "Fecha",
+                    "temperature_2m": "Temp. Prom. (°C)",
+                    "relative_humidity_2m": "Humedad Rel. (%)",
+                    "estres_hidrico": "Estado Hídrico",
+                    "ventana_fumigacion": "Fumigación",
+                    "riesgo_biologico": "Riesgo Plagas",
+                    "alerta_helada_tipo": "Heladas",
+                    "calidad_estimada_fruto": "Calidad Esperada"
+                }
+                df_tabla.rename(columns=nombres_amigables, inplace=True)
+                st.dataframe(df_tabla, hide_index=True, use_container_width=True)
 
         else:
             st.info("No hay datos de proyección disponibles para esta región.")
@@ -142,31 +129,38 @@ def main():
         st.divider()
 
     # ── Tabs enfocados en el Análisis Histórico y Detallado ────────
-    st.markdown("### 📊 Análisis Detallado (Histórico + Proyección)")
+    st.markdown("### 📊 Análisis Detallado y Preguntas de Negocio")
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "🌡️ Clima Diario", 
-        "🚜 Fumigación", 
-        "🐛 Riesgos Biológicos", 
-        "❄️ Heladas", 
-        "📉 Rendimiento"
+        "🌡️ 1. Clima General", 
+        "🚜 2. Insumos", 
+        "🐛 3. Sanidad", 
+        "❄️ 4. Heladas", 
+        "📉 5. Rentabilidad"
     ])
 
     with tab1:
-        st.subheader("1. Monitoreo de Temperatura y Humedad")
+        st.markdown("#### Slide 1: Planificación Logística y Clima General")
+        st.info("**❓ Pregunta:** ¿Cómo evolucionarán la temperatura y la humedad en los próximos 14 días en comparación con el comportamiento histórico de mi región?")
+        st.success("**💡 Valor de Negocio:** Permite anticipar escenarios extremos (como olas de calor o humedad prolongada) para ajustar preventivamente los turnos de riego y la asignación de personal en campo.")
         st.plotly_chart(plot_clima_general(df_filtrado), use_container_width=True)
 
     with tab2:
-        st.subheader("2. Días óptimos para aplicación de agroquímicos")
+        st.markdown("#### Slide 2: Eficiencia en Insumos (Ventana de Fumigación)")
+        st.info("**❓ Pregunta:** ¿Qué días presentan los niveles óptimos de humedad para aplicar agroquímicos sin perder el producto por evaporación rápida o escurrimiento en las hojas?")
+        st.success("**💡 Valor de Negocio:** Asegura el retorno de inversión en insumos. Evita aplicar costosos fertilizantes o pesticidas en días donde el exceso de rocío o la sequedad extrema impedirán que la planta absorba el producto.")
         st.plotly_chart(plot_ventana_fumigacion(df_filtrado), use_container_width=True)
 
     with tab3:
-        st.subheader("3. Días con condiciones propicias para plagas y hongos")
+        st.markdown("#### Slide 3: Sanidad del Cultivo (Riesgo Biológico)")
+        st.info("**❓ Pregunta:** ¿En qué momentos precisos las condiciones de humedad y temperatura se convierten en un riesgo alto para la proliferación rápida de plagas y hongos?")
+        st.success("**💡 Valor de Negocio:** Habilita un enfoque preventivo. El agricultor puede aplicar fungicidas exactos antes de que ocurra un brote, salvaguardando la salud y el valor de la cosecha.")
         st.plotly_chart(plot_riesgo_biologico(df_filtrado), use_container_width=True)
 
     with tab4:
-        st.subheader("4. Monitoreo y Frecuencia de Heladas por Región")
-        st.caption("Las heladas negras representan un congelamiento seco de alto riesgo para los tejidos del cultivo.")
-
+        st.markdown("#### Slide 4: Mitigación de Daños Irreversibles (Heladas)")
+        st.info("**❓ Pregunta:** ¿Cuál es la probabilidad real de sufrir daños por congelamiento (Helada Negra) y cuándo debo activar mis sistemas mecánicos de protección?")
+        st.success("**💡 Valor de Negocio:** Salva la producción. Al identificar las 'Heladas Negras' (que queman los tejidos internos), el agricultor sabe exactamente qué noches debe gastar combustible encendiendo calefactores de campo o aspersores.")
+        
         df_heladas_sel = df_filtrado[df_filtrado['alerta_helada_tipo'].isin(['Helada Blanca', 'Helada Negra'])]
         total_dias_analizados = len(df_filtrado)
         total_dias_helada = len(df_heladas_sel)
@@ -179,11 +173,12 @@ def main():
         k2.metric("Frecuencia de Ocurrencia", f"{prob_helada:.1f}%")
         k3.metric("🚨 Días con Helada Negra (Alto Riesgo)", f"{dias_helada_negra} días", delta_color="inverse")
 
-        st.divider()
         st.plotly_chart(plot_alertas_heladas(df_filtrado), use_container_width=True)
 
     with tab5:
-        st.subheader("5. Proyección de Calidad y Penalizaciones Económicas")
+        st.markdown("#### Slide 5: Previsibilidad de Rentabilidad (Calidad y Rendimiento)")
+        st.info("**❓ Pregunta:** ¿De qué manera las condiciones climáticas acumuladas afectarán la calidad final de mi producto (Premium vs. Estándar) y la rentabilidad de esta temporada?")
+        st.success("**💡 Valor de Negocio:** Facilita la previsión de ingresos. Permite al agricultor estimar sus márgenes de ganancia y negociar precios de venta por adelantado con los distribuidores, sabiendo si su cosecha tendrá calidad de exportación o mercado local.")
         st.plotly_chart(plot_calidad_vs_penalizacion(df_filtrado), use_container_width=True)
 
 if __name__ == "__main__":
