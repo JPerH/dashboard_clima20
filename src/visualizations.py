@@ -61,7 +61,7 @@ def _generar_matriz_heatmap(df, columna, mapeo):
 def plot_ventana_fumigacion(df: pd.DataFrame):
     if df.empty: return go.Figure()
     
-    mapeo = {'Óptima (Verde)': 1, 'Riesgo de Lavado (Roja)': 0}
+    mapeo = {'Óptima (Marron)': 1, 'Riesgo de Lavado (Roja)': 0}
     matrix_num, hover_txt = _generar_matriz_heatmap(df, 'ventana_fumigacion', mapeo)
     matrix_num = matrix_num.fillna(0) # Rojo por defecto si falta
     
